@@ -35,10 +35,18 @@ def login(currentSession, url, useCookies):
 
         tempLoginPage = BeautifulSoup(loginPage.text, 'lxml')
 
-        if tempLoginPage.find(class_='info_div') == None:
+        if useCookies and tempLoginPage.find(class_='info_div') == None:
+            os.system('cls' if os.name == 'nt' else clear)
+            print('Cookies is not valid.')
+            input('Please use username and password combination to login.')
+            useCookies = False
+            os.system('cls' if os.name == 'nt' else 'clear')
+
+        elif tempLoginPage.find(class_='info_div') == None:
             os.system('cls' if os.name == 'nt' else clear)
             print('Incorrect username or password.')
-            print('Please try again.\n')
+            input('Please try again.')
+            os.system('cls' if os.name == 'nt' else 'clear')
         else:
             break
     
@@ -76,9 +84,9 @@ def showNumberOfNewPm(soupedPm):
     else:
         print('There are no new private message\n.')
 
-def importAllPm(currentSession, soupedPm, pmList):
+def retrieveAllPm(currentSession, soupedPm, pmList):
     numberOfTotalPm = soupedPm.find(class_='section_header').text.strip()[5:-5].strip()
-    maxPage = math.ceil(int(numberOfTotalPm) / 25) # round it up
+    maxPage = math.ceil(int(numberOfTotalPm) / 25) # round it up | each page contains 25 pm
     
     counter = 1
     for singlePage in range(maxPage):
@@ -111,6 +119,7 @@ def displayPmList(currentSession, pmList):
             print('[,]\tPrevious page')
         if page != max_page:
             print('[.]\tNext page')
+        print('[/]\tRefresh')
         print('[0]\tBack to home\n')
         
         while True:
@@ -123,7 +132,7 @@ def displayPmList(currentSession, pmList):
                 numberSet[i] = str(numberSet[i])
             
             # validate usrInput
-            if not (usrInput in numberSet) and usrInput != ',' and usrInput != '.':
+            if not (usrInput in numberSet) and usrInput != ',' and usrInput != '.' and usrInput != '/':
                 valid = False
             
             if page == 1 and usrInput == ',':
@@ -140,11 +149,15 @@ def displayPmList(currentSession, pmList):
         
         if usrInput == ',':
             page -= 1
-            continue
         
         elif usrInput == '.':
             page += 1
-            continue
+
+        elif usrInput == '/':
+            temp = currentSession.get('https://www.dcfever.com/pm/index.php')
+            pm = BeautifulSoup(temp.text, 'lxml')
+            pmList = ['']
+            retrieveAllPm(currentSession, pm, pmList)
 
         elif usrInput == '0':
             break

@@ -28,7 +28,7 @@ while True:
     pm = BeautifulSoup(temp.text, 'lxml')
 
     showNumberOfNewPm(pm)
-    importAllPm(s, pm, pmList)  
+    retrieveAllPm(s, pm, pmList)  
     print('[1]\tCheck pm')
     print('[0]\tLeave\n')
     resp = input('Option: ')
