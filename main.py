@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
-import requests
-import os
-import math
+import requests, os
 from supp import *
+from pathlib import Path
 
 pmList = [''] # [title, link, status] and start from 1
 
@@ -10,7 +9,15 @@ print('Welcome to use DCFever message checker.\n')
 s = requests.Session()
 url = 'https://www.dcfever.com/users/login.php'
 
-loginPage = login(s, url)
+cookiesExist = Path('cookies')
+if cookiesExist.exists():
+    temp = input('Do you want to use the existing cookies to login?(Y/n) ')
+    if str.lower(temp) == 'y':
+        loginPage = login(s, url, True)
+    else:
+        loginPage = login(s, url, False)
+else:
+    loginPage = login(s, url, False)
 
 option = ''
 while True:

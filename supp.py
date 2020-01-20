@@ -1,30 +1,37 @@
 from bs4 import BeautifulSoup
-import requests
-import getpass
-import os
-import math
+import requests, getpass, os, math, pickle
 
-def login(currentSession, url):
+def login(currentSession, url, useCookies):
 
     headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36'
     }
+    allowCookies = 'n'
 
     while True:
-        print('E-mail: ', end = '')
-        username_login = input()
-        password_login = getpass.getpass(prompt='Password: ')
+        if not useCookies:
+            username_login = input('E-mail: ')
+            password_login = getpass.getpass(prompt='Password: ')
+            allowCookies = input('Allow cookies?(Y/n) ')
 
-        payload = {
-        'username' : username_login,
-        'password' : password_login,
-        'autologin' : '1'
-        }
+            payload = {
+            'username' : username_login,
+            'password' : password_login,
+            }
+        
+            if str.lower(allowCookies) == 'y':
+                payload['autologin'] = '1'
 
-        r = currentSession.get(url, headers = headers)
-        soup = BeautifulSoup(r.content, 'lxml')
-        payload['action'] = soup.find('input', attrs={'name' : 'action'})['value']
-        loginPage = currentSession.post(url, data=payload, headers = headers)
+            r = currentSession.get(url, headers = headers)
+            soup = BeautifulSoup(r.content, 'lxml')
+            payload['action'] = soup.find('input', attrs={'name' : 'action'})['value']
+            loginPage = currentSession.post(url, data=payload, headers = headers)
+        
+        else:
+            f = open('cookies', 'rb')
+            currentSession.cookies.update(pickle.load(f))
+            f.close()
+            loginPage = currentSession.get('https://www.dcfever.com/users/index.php')
 
         tempLoginPage = BeautifulSoup(loginPage.text, 'lxml')
 
@@ -35,6 +42,12 @@ def login(currentSession, url):
         else:
             break
     
+    # store cookies
+    if str.lower(allowCookies) == 'y':
+        f = open('cookies', 'wb')
+        pickle.dump(currentSession.cookies, f)
+        f.close()
+
     # return main webpage after login process
     return loginPage
 
